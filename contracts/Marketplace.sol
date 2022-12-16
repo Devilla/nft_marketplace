@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Unlicensed
 
-pragma solidity 0.8.17;
+pragma solidity 0.8.4;
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
@@ -14,7 +14,7 @@ contract Marketplace {
         address nftContractAddress;
         uint256 tokenId;
         address payable seller;
-        address payable owner;
+        address owner;
         uint256 price;
         bool isSold;
         bool isPresent;
@@ -32,11 +32,11 @@ contract Marketplace {
     );
 
     constructor() {
-  		itemCounter = 0;
-  		owner = payable(msg.sender);
-  		listingPrice = 0.01 ether;
-		}
-    
+        itemCounter = 0;
+        owner = payable(msg.sender);
+        listingPrice = 0.01 ether;
+    }
+
     function listMarketItem(
         address nftContractAddress,
         uint256 tokenId,
@@ -76,56 +76,39 @@ contract Marketplace {
         itemCounter += 1;
     }
 
-    marketItems[itemCounter] = MarketItem(
-        itemCounter,
-        nftContractAddress,
-        tokenId,
-        payable(msg.sender),
-        address(0),
-        price,
-        false,
-        true
-    );
+    function buyMarketItem(uint256 itemId) public payable {
+        require(marketItems[itemId].isPresent, "Item is not present");
+        require(marketItems[itemId].isSold == false, "Item is already sold");
+        require(
+            marketItems[itemId].price == msg.value,
+            "Must pay the correct price"
+        );
 
-    IERC721(nftContractAddress).transferFrom(
-    msg.sender,
-    address(this),
-    tokenId
-);
+        marketItems[itemId].isSold = true;
+        marketItems[itemId].owner = payable(msg.sender);
 
-function buyMarketItem(uint256 itemId) public payable {
-    require(marketItems[itemId].isPresent, "Item is not present");
-    require(marketItems[itemId].isSold == false, "Item is already sold");
-    require(
-        marketItems[itemId].price == msg.value,
-        "Must pay the correct price"
-    );
+        IERC721(marketItems[itemId].nftContractAddress).transferFrom(
+            address(this),
+            msg.sender,
+            marketItems[itemId].tokenId
+        );
+    }
 
-    marketItems[itemId].isSold = true;
-    marketItems[itemId].owner = payable(msg.sender);
+    function getMarketItem(uint256 itemId)
+        public
+        view
+        returns (MarketItem memory items)
+    {
+        items = marketItems[itemId];
+    }
 
-    IERC721(marketItems[itemId].nftContractAddress).transferFrom(
-        address(this),
-        msg.sender,
-        marketItems[itemId].tokenId
-    );
-}
+    function changeListingPrice(uint256 newPrice) public {
+        require(newPrice > 0, "Listing Price must be greater than 0");
+        require(
+            msg.sender == owner,
+            "Only the owner can change the listing price"
+        );
 
-function getMarketItem(uint256 itemId)
-    public
-    view
-    returns (MarketItem memory items)
-{
-    items = marketItems[itemId];
-}
-
-function changeListingPrice(uint256 newPrice) public {
-    require(newPrice > 0, "Listing Price must be greater than 0");
-    require(
-        msg.sender == owner,
-        "Only the owner can change the listing price"
-    );
-
-    listingPrice = newPrice;
-}
+        listingPrice = newPrice;
+    }
 }
