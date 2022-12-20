@@ -1,12 +1,25 @@
-/** @type import('hardhat/config').HardhatUserConfig */
 require("@nomiclabs/hardhat-waffle");
+require("dotenv").config();
 
+task("deploy", "Deploy the smart contracts", async(taskArgs, hre) => {
+
+  const Marketplace = await hre.ethers.getContractFactory("Marketplace");
+  const marketplace = await Marketplace.deploy();
+
+  await marketplace.deployed();
+})
+
+/**
+ * @type import('hardhat/config').HardhatUserConfig
+ */
 module.exports = {
   solidity: "0.8.4",
   networks: {
-    development: {
-      url: `https://127.0.0.1:8545`,
-      accounts: ['0x7e4d587c185a74ad84ad83ade436ad5aa5b86ceffc6e3d1af1b04a659b2c26a8']
+    dev: {
+      url: "http://localhost:8545",
+      accounts: [
+        process.env.PRIVATE_KEY
+      ]
     }
   }
 };

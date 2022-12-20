@@ -4,3 +4,6 @@
 # build and compiled
 /artifacts
 /cache
+
+# Envionment variables
+.env
